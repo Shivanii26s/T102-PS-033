@@ -1,0 +1,16 @@
+sku_id,description,unit_weight_kg,temp_class,expiry_tracked,home_zone,pick_face_bin
+SKU-001,Sona Masoori Rice 25 kg bag,25.00,AMBIENT,false,ZN-B,BIN-06-01
+SKU-002,Toor Dal 1 kg pouch,1.00,AMBIENT,false,ZN-A,BIN-02-01
+SKU-003,Sunflower Oil 1 l pouch,0.95,AMBIENT,true,ZN-A,BIN-01-03
+SKU-004,Marie Biscuits 250 g,0.27,AMBIENT,true,ZN-A,BIN-01-01
+SKU-005,Instant Noodles 70 g x 12,0.90,AMBIENT,true,ZN-A,BIN-03-03
+SKU-006,Detergent Powder 1 kg,1.05,AMBIENT,false,ZN-B,BIN-05-02
+SKU-007,Toilet Soap 100 g x 4,0.42,AMBIENT,false,ZN-A,BIN-01-02
+SKU-008,Filter Coffee 500 g,0.52,AMBIENT,true,ZN-A,BIN-02-03
+SKU-009,Steel Scrubber x 3,0.08,AMBIENT,false,ZN-B,BIN-06-03
+SKU-010,Atta 10 kg bag,10.00,AMBIENT,false,ZN-B,BIN-07-01
+SKU-011,Toned Milk 1 l UHT,1.04,CHILLED,true,ZN-C,BIN-10-03
+SKU-012,Paneer 200 g,0.21,CHILLED,true,ZN-C,BIN-10-01
+SKU-013,Butter 500 g,0.52,CHILLED,true,ZN-C,BIN-09-03
+SKU-014,Curd 1 kg tub,1.02,CHILLED,true,ZN-C,BIN-08-03
+SKU-015,Cheese Slices 200 g,0.21,CHILLED,true,ZN-C,BIN-09-02

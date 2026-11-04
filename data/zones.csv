@@ -1,0 +1,4 @@
+zone_id,zone_name,temp_class,aisles
+ZN-A,Fast movers ambient,AMBIENT,1-4
+ZN-B,Bulk ambient,AMBIENT,5-7
+ZN-C,Chilled,CHILLED,8-10
