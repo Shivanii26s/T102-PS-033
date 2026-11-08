@@ -10,6 +10,9 @@ Copy the `src/models` and `src/services` files into the matching folders in the 
 - `ReservationService`: `reserve_order(order_id, {sku_id: qty}, at_datetime, allow_short=False)`, `confirm_order(order_id, at_datetime)`, `release_order(order_id)`, `release_expired(at_datetime)`.
 - `ReplenishmentService`: `replenish(sku_id, at_datetime)`.
 - `ExpiryService`: `is_pickable(expiry_date, at_datetime)`, `blocked_lots(at_datetime)`, `quarantine_due(end_of_day_datetime, optional_temp_to_quarantine_bin_map)`.
+- `ShelfLifeService`: `get_pickable_lots(sku_id, as_of, optional_minimum_shelf_life_days)`, `is_pickable(lot, as_of)`, `is_slow_moving(lot, as_of)`. The default minimum shelf life is 60 days; stock received more than 90 days earlier is slow-moving and is sorted after normal FIFO stock.
+- `PickSequenceService`: `sequence_pick_list(pick_list)` orders bin allocations by ascending aisle, alternating ascending (`UP`) and descending (`DOWN`) bin numbers.
+- `CycleCountService`: `apply_count(bin_id, sku_id, counted_qty, optional_lot_no, optional_timestamp)` treats `counted_qty` as the SKU total in that bin, validates the variance, and freezes the bin when it exceeds the smaller of 2% of expected quantity or 5 units. A `lot_no` is required for a positive adjustment. `adjust_bin(bin_id, optional_timestamp)` posts pending frozen-bin adjustments and unfreezes the bin; shortfalls are removed oldest-lot first.
 - `AuditService`: `movement_rows`, `export_movements(path)`, `stock_snapshot`, `export_stock_on_hand(path)`, `count_variance(system_qty, counted_qty)`.
 
 ## Important integration notes
