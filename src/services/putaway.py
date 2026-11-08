@@ -28,9 +28,16 @@ class PutawayService:
         weight_units_left = int(weight_left // unit_weight)
         return max(0, min(units_left, weight_units_left))
 
-    def _bin_has_sku_lot(self, bin_id, sku_id, lot_no):
+    def _bin_has_sku_lot(
+        self, bin_id, sku_id, lot_no, mfg_date=None, expiry_date=None
+    ):
         item = self.inventory.stock.get((bin_id, sku_id, lot_no))
-        return item is not None and item.qty > 0 and item.status == "AVAILABLE"
+        return (
+            item is not None
+            and item.qty > 0
+            and item.status == "AVAILABLE"
+            and (item.mfg_date, item.expiry_date) == (mfg_date, expiry_date)
+        )
 
     def _bin_skus(self, bin_id):
         return {
@@ -53,7 +60,7 @@ class PutawayService:
 
         return self._available_capacity(bin_obj, sku_id) > 0
 
-    def _normal_candidates(self, sku_id, lot_no):
+    def _normal_candidates(self, sku_id, lot_no, mfg_date, expiry_date):
         sku = self.sku_master[sku_id]
         compatible = self.warehouse.compatible_bins(
             sku["temp_class"],
@@ -63,7 +70,9 @@ class PutawayService:
         # Priority 1: bins already containing this SKU and lot.
         same_lot = [
             b for b in compatible
-            if self._bin_has_sku_lot(b.bin_id, sku_id, lot_no)
+            if self._bin_has_sku_lot(
+                b.bin_id, sku_id, lot_no, mfg_date, expiry_date
+            )
             and self._can_accept_sku(b, sku_id, lot_no)
         ]
 
@@ -125,7 +134,9 @@ class PutawayService:
         if expiry_soon:
             candidates = [(4, self._quarantine_candidates(sku_id))]
         else:
-            candidates = self._normal_candidates(sku_id, lot_no)
+            candidates = self._normal_candidates(
+                sku_id, lot_no, grn_line.mfg_date, grn_line.expiry_date
+            )
 
         output_rows = []
 

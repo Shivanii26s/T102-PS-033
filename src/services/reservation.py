@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from src.models.entities import Reservation
+from src.services.shelf_life import ShelfLifeService
 
 
 class ReservationService:
@@ -17,6 +18,11 @@ class ReservationService:
         self.sku_master = sku_master or inventory.sku_master
         self.lock_hours = lock_hours
         self.min_shelf_life_days = min_shelf_life_days
+        self.shelf_life = ShelfLifeService(
+            inventory,
+            self.sku_master,
+            minimum_shelf_life_days=min_shelf_life_days,
+        )
         self.reservations: list[Reservation] = []
         self.orders = {}
 
@@ -54,11 +60,9 @@ class ReservationService:
         """Check the minimum remaining shelf life for expiry-tracked stock."""
         if lot.expiry_date is None:
             return False
-
-        current_date = at.date() if isinstance(at, datetime) else at
-        remaining_days = (lot.expiry_date - current_date).days
-
-        return remaining_days >= self.min_shelf_life_days
+        return self.shelf_life.is_pickable(
+            lot, at, self.min_shelf_life_days
+        )
 
     def release_expired(self, at):
         released = []
@@ -100,6 +104,7 @@ class ReservationService:
             lots = [
                 lot for lot in lots
                 if lot.status in self.inventory.PICKABLE_STATUSES
+                and lot.bin_id not in self.inventory.frozen_bins
             ]
 
             if expiry_tracked:
@@ -188,6 +193,28 @@ class ReservationService:
         record["status"] = "CONFIRMED"
 
         return active
+
+    def mark_picked(self, order_id):
+        """Release confirmed reservations after their stock has been picked."""
+        record = self.orders.get(order_id)
+        if not record or record["status"] != "CONFIRMED":
+            raise ValueError(f"Order is not confirmed: {order_id}")
+
+        reservations = [
+            reservation for reservation in record["reservations"]
+            if not reservation.released
+        ]
+        if not reservations or any(
+            not reservation.confirmed for reservation in reservations
+        ):
+            raise ValueError(
+                f"Order has no active confirmed reservations: {order_id}"
+            )
+
+        for reservation in reservations:
+            reservation.released = True
+
+        return reservations
 
     def release_order(self, order_id):
         record = self.orders.get(order_id)

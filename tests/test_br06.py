@@ -111,3 +111,28 @@ def test_br06_confirmed_reservation_stays_locked_after_48_hours():
 
     assert third_order == []
     assert svc.orders["O3"]["status"] == "HOLD"
+
+
+def test_br06_picked_reservation_no_longer_locks_deducted_stock():
+    inv, sku = setup_br06()
+    svc = ReservationService(inv, sku)
+    start = datetime(2028, 2, 1, 10, 0)
+
+    reservations = svc.reserve_order("O1", {"SKU1": 5}, start)
+    svc.confirm_order("O1", start + timedelta(hours=1))
+    inv.remove_stock(
+        reservations[0].bin_id,
+        reservations[0].sku_id,
+        reservations[0].lot_no,
+        reservations[0].qty,
+        timestamp=start + timedelta(hours=1),
+        reference="O1",
+    )
+    svc.mark_picked("O1")
+
+    next_order = svc.reserve_order(
+        "O2", {"SKU1": 3}, start + timedelta(hours=2)
+    )
+
+    assert sum(reservation.qty for reservation in next_order) == 3
+    assert reservations[0].released is True

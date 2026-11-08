@@ -69,6 +69,13 @@ class ReplenishmentService:
             bin_id=pick_bin
         )
 
+        if pick_bin in self.inventory.frozen_bins:
+            return {
+                "status": "FROZEN_PICK_FACE",
+                "moved_qty": 0,
+                "pick_face_qty": current
+            }
+
         if current >= capacity * self.trigger_ratio:
             return {
                 "status": "NOT_REQUIRED",
@@ -77,7 +84,15 @@ class ReplenishmentService:
             }
 
         target = int(capacity * self.target_ratio)
-        needed = max(0, target - current)
+        requested = max(0, target - current)
+        unit_weight = sku["unit_weight_kg"]
+        units_left = capacity - self.inventory.qty_in_bin(pick_bin)
+        weight_left = (
+            bin_obj.max_weight_kg - self.inventory.weight_in_bin(pick_bin)
+        )
+        weight_units_left = int(weight_left // unit_weight)
+        destination_capacity = max(0, min(units_left, weight_units_left))
+        needed = min(requested, destination_capacity)
 
         reserve_bins = self.warehouse.compatible_bins(
             sku["temp_class"],
@@ -91,6 +106,7 @@ class ReplenishmentService:
             lot
             for lot in self.inventory.lots(sku_id=sku_id)
             if lot.bin_id in reserve_ids
+            and lot.bin_id not in self.inventory.frozen_bins
             and lot.status in InventoryService.PICKABLE_STATUSES
         ]
 
@@ -127,5 +143,5 @@ class ReplenishmentService:
             "moved_qty": moved,
             "pick_face_qty": current + moved,
             "target_qty": target,
-            "short_qty": max(0, needed - moved)
+            "short_qty": max(0, requested - moved)
         }
